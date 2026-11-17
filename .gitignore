@@ -1,0 +1,18 @@
+# Arquivos de VM e imagens: grandes demais para o Git
+*.iso
+*.vdi
+*.vmdk
+*.vbox
+*.vbox-prev
+*.ova
+*.ovf
+
+# Arquivos temporários de editores e sistema
+*~
+*.swp
+.DS_Store
+Thumbs.db
+
+# Segredos (senhas nunca vão para o repositório)
+*.secret
+senhas.txt
