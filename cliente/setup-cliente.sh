@@ -123,11 +123,20 @@ FIM
 #     transferência (a mesma do Ctrl+C do notebook). Sem isso, o
 #     xterm só cola a seleção do mouse (Shift+Insert / botão do meio).
 #   - fonte maior e mais legível
+# Valem para os dois nomes do programa: XTerm (o "xterm") e UXTerm
+# (a variante com UTF-8 que o Alt+Enter do i3 abre).
 cat > "$CASA/.Xresources" <<'FIM'
 XTerm*faceName: Monospace
 XTerm*faceSize: 11
 XTerm*selectToClipboard: true
 XTerm*VT100.Translations: #override \n\
+    Ctrl Shift <Key>C: copy-selection(CLIPBOARD) \n\
+    Ctrl Shift <Key>V: insert-selection(CLIPBOARD)
+
+UXTerm*faceName: Monospace
+UXTerm*faceSize: 11
+UXTerm*selectToClipboard: true
+UXTerm*VT100.Translations: #override \n\
     Ctrl Shift <Key>C: copy-selection(CLIPBOARD) \n\
     Ctrl Shift <Key>V: insert-selection(CLIPBOARD)
 FIM
