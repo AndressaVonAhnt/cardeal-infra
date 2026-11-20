@@ -14,7 +14,7 @@
 #   3. Instala os programas de teste (Firefox, Thunderbird,
 #      Wireshark, dig, smbclient, curl)
 #   4. Instala os Guest Additions (copiar/colar com o notebook)
-#   5. Configura o i3 e o startx para o usuário
+#   5. Configura o i3, o xterm e o startx para o usuário
 #
 # Pode ser rodado mais de uma vez: o resultado é sempre o mesmo.
 # =============================================================
@@ -77,10 +77,11 @@ sleep 5
 # i3:           gerenciador de janelas leve (lado a lado)
 # xterm:        terminal gráfico simples
 # x11-xkb-utils: setxkbmap, para o teclado ABNT2 no modo gráfico
+# x11-xserver-utils: xrdb, que carrega as preferências do xterm
 echo ">> 2. Instalando a interface gráfica (Xorg + i3)"
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    xserver-xorg xinit i3 xterm x11-xkb-utils
+    xserver-xorg xinit i3 xterm x11-xkb-utils x11-xserver-utils
 
 # -------------------------------------------------------------
 # 3. Programas de teste
@@ -110,25 +111,47 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y \
 # -------------------------------------------------------------
 echo ">> 5. Configurando o i3 para $USUARIO"
 
-# startx lê o ~/.xinitrc para saber o que abrir: o i3.
-echo "exec i3" > "$CASA/.xinitrc"
+# startx lê o ~/.xinitrc: carrega as preferências do xterm
+# (~/.Xresources) e abre o i3.
+cat > "$CASA/.xinitrc" <<'FIM'
+xrdb -merge ~/.Xresources
+exec i3
+FIM
+
+# Preferências do xterm:
+#   - Ctrl+Shift+C / Ctrl+Shift+V copiam e colam na área de
+#     transferência (a mesma do Ctrl+C do notebook). Sem isso, o
+#     xterm só cola a seleção do mouse (Shift+Insert / botão do meio).
+#   - fonte maior e mais legível
+cat > "$CASA/.Xresources" <<'FIM'
+XTerm*faceName: Monospace
+XTerm*faceSize: 11
+XTerm*selectToClipboard: true
+XTerm*VT100.Translations: #override \n\
+    Ctrl Shift <Key>C: copy-selection(CLIPBOARD) \n\
+    Ctrl Shift <Key>V: insert-selection(CLIPBOARD)
+FIM
 
 # Parte da configuração padrão do i3 (assim ele não abre o assistente
-# de primeira execução) e acrescenta três linhas no final:
+# de primeira execução) e acrescenta no final:
 #   - teclado ABNT2 no modo gráfico
-#   - VBoxClient-all: liga copiar/colar e o ajuste de tela
+#   - VBoxClient --clipboard: copiar/colar com o notebook
+#   - VBoxClient --vmsvga: a tela se ajusta ao tamanho da janela
 #   - um terminal já aberto ao entrar
+# O "VBoxClient-all" não iniciava os serviços no i3; por isso cada
+# serviço é chamado explicitamente.
 mkdir -p "$CASA/.config/i3"
 cp /etc/i3/config "$CASA/.config/i3/config"
-cat >> "$CASA/.config/i3/config" <<'EOF'
+cat >> "$CASA/.config/i3/config" <<'FIM'
 
 # --- Acrescentado por cliente/setup-cliente.sh ---
 exec --no-startup-id setxkbmap br
-exec --no-startup-id VBoxClient-all
+exec --no-startup-id VBoxClient --clipboard
+exec --no-startup-id VBoxClient --vmsvga
 exec --no-startup-id i3-sensible-terminal
-EOF
+FIM
 
-chown -R "$USUARIO:$USUARIO" "$CASA/.xinitrc" "$CASA/.config"
+chown -R "$USUARIO:$USUARIO" "$CASA/.xinitrc" "$CASA/.Xresources" "$CASA/.config"
 
 # -------------------------------------------------------------
 # 6. Verificação
