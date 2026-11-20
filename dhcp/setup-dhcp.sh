@@ -93,10 +93,19 @@ EOF
 # -------------------------------------------------------------
 # 3. Validação e serviço
 # -------------------------------------------------------------
+# O Kea roda como o usuário _kea, e a pasta /etc/kea é dele (750).
+# Dono root:_kea e modo 640: o Kea lê pelo grupo, outros usuários
+# não leem (a configuração do Kea pode conter senhas).
+chown root:_kea "$CONF"
+chmod 640 "$CONF"
+
 # -t só confere o arquivo, sem iniciar o servidor. Se houver erro,
 # o set -e para o script aqui, antes de reiniciar o serviço.
+# Roda como _kea: como root, o AppArmor do Ubuntu proíbe o kea-dhcp4
+# de usar as permissões especiais do root (dac_override) para entrar
+# na pasta /etc/kea, e a validação falha com "Unable to open file".
 echo ">> 3. Validando a configuração"
-kea-dhcp4 -t "$CONF"
+runuser -u _kea -- kea-dhcp4 -t "$CONF"
 
 echo ">> 4. Reiniciando o serviço"
 systemctl enable kea-dhcp4-server
