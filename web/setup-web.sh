@@ -51,6 +51,7 @@ network:
           via: ${IP_GW}
       nameservers:
         addresses: [${IP_GW}]
+        search: [${DOMINIO}]
 EOF
     chmod 600 /etc/netplan/00-installer-config.yaml
     netplan apply

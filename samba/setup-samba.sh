@@ -36,7 +36,8 @@ cat >> /etc/samba/smb.conf <<EOF
    valid users = funcionario
 EOF
 fi
-SENHA_SAMBA="cardeal123"
+read -rsp "Senha do usuario funcionario: " SENHA_SAMBA
+echo
 id funcionario &>/dev/null || useradd -M -s /usr/sbin/nologin funcionario
 (echo "$SENHA_SAMBA"; echo "$SENHA_SAMBA") | smbpasswd -s -a funcionario
 chown funcionario /srv/compartilhado
