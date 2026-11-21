@@ -2,7 +2,8 @@
 # =============================================================
 # setup-email.sh - email na mail (Postfix + Dovecot)
 # =============================================================
-# Uso: sudo bash email/setup-email.sh
+# Uso:  sudo bash email/setup-email.sh        (instala e configura o email)
+#       sudo bash email/setup-email.sh rede   (idem + IP fixo, no Encontro 2)
 # =============================================================
 
 # Script para:
@@ -42,7 +43,8 @@ mail_inbox_path = %{home}/Maildir
 auth_allow_cleartext = yes
 ssl = no
 EOF
-SENHA_EMAIL="cardeal123"
+read -rsp "Senha dos usuarios de email: " SENHA_EMAIL
+echo
 for u in ana joao; do
     id "$u" &>/dev/null || useradd -m -s /usr/sbin/nologin "$u"
     echo "$u:$SENHA_EMAIL" | chpasswd
@@ -54,5 +56,29 @@ systemctl enable postfix dovecot
 
 echo ">> 4. Verificando"
 systemctl is-active postfix dovecot
+
+echo ">> 5. IP fixo"
+if [ "${1:-}" = "rede" ]; then
+cat > /etc/netplan/00-installer-config.yaml <<EOF
+network:
+  version: 2
+  ethernets:
+    ${IF_UNICA}:
+      dhcp4: false
+      addresses:
+        - ${IP_MAIL}/${PREFIXO}
+      routes:
+        - to: default
+          via: ${IP_GW}
+      nameservers:
+        addresses: [${IP_GW}]
+        search: [${DOMINIO}]
+EOF
+    chmod 600 /etc/netplan/00-installer-config.yaml
+    netplan apply
+    echo "IP fixo aplicado"
+else
+    echo "Pulando IP fixo (rode com 'rede' para aplicar)"
+fi
 
 echo ">> Pronto."
